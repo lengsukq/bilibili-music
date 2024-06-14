@@ -11,20 +11,18 @@ import {
     User,
     Link,
     Tooltip,
-    ChipProps
+    ChipProps,
+    Chip,
+    CardBody,
+    Card,
+    CardHeader
 } from "@nextui-org/react";
 import {EditIcon} from "@/Components/icon/EditIcon";
 import {DeleteIcon} from "@/Components/icon/DeleteIcon";
 import {EyeIcon} from "@/Components/icon/EyeIcon";
 import {SearchIcon} from "@/Components/icon/SearchIcon";
 import {users} from "@/Components/icon/data";
-import {getCollectList, getCreateList} from "@/utils/client/apihttp";
-
-const statusColorMap: Record<string, ChipProps["color"]> = {
-    active: "success",
-    paused: "danger",
-    vacation: "warning",
-};
+import {getCollectList, getCollectiondetailList, getCreateList, getMusicUrl, getSeriesdetailList} from "@/utils/client/apihttp";
 
 type User = typeof users[0];
 
@@ -35,33 +33,102 @@ export default function App() {
         {name: "源地址", uid: "bvid"},
         // {name: "ACTIONS", uid: "actions"},
     ];
+    const audioRef = React.useRef<HTMLAudioElement | null>(null);
+    const recommendList = [
+        {
+            title: '咻·循环',
+            url: 'https://space.bilibili.com/37754047/channel/seriesdetail?sid=3763056'
+        },
+        {
+            title: '咻·流行',
+            url: 'https://space.bilibili.com/37754047/channel/seriesdetail?sid=3763025'
+        },
+        {
+            title: '咻·国风',
+            url: 'https://space.bilibili.com/37754047/channel/seriesdetail?sid=3763001'
+        },
+        {
+            title: '音乐收藏夹',
+            url: 'https://space.bilibili.com/1105706107/favlist?fid=2555166007&ftype=create'
+        },{
+            title: '邓紫棋',
+            url: 'https://space.bilibili.com/490620454/channel/collectiondetail?sid=1758966'
+        },{
+            title: '国风',
+            url: 'https://space.bilibili.com/473586817/channel/collectiondetail?sid=2049027'
+        },{
+            title: '老歌',
+            url: 'https://space.bilibili.com/473586817/channel/collectiondetail?sid=1982280'
+        },{
+            title: '英文',
+            url: 'https://space.bilibili.com/473586817/channel/collectiondetail?sid=2006847'
+        }
+    ]
+    const recommendClick = (url: string) => {
+        setSearchKeyWords(url);
+        searchAct(url);
+    }
+    const [musicURl, setMusicURl] = React.useState("");
+    const [selectedKeys, setSelectedKeys] = React.useState(new Set([]));
     const [searchKeyWords, setSearchKeyWords] = React.useState("");
     const [data, setData] = React.useState(users);
-    const getCollectListAct = async (fid:string) => {
-        const res = await getCollectList({fid: fid});
-        console.log(res, "res")
-        if (res.data.medias.length){
-            setData(res.data.medias);
-        }else{
-            setData([]);
-        }
-    }
-    const searchAct = async () => {
+    const onSelectionChange = async (keys: any) => {
+        console.log(keys.currentKey)
+        setSelectedKeys(keys);
+        const musicUrl = await getMusicUrl({bvid: keys.currentKey}).then(res => res.data);
+        setMusicURl(musicUrl);
+        setTimeout(() => {
+            audioRef.current?.play();
+        },200)
+    };
+    const searchAct = async (keyWords = searchKeyWords) => {
         let res;
-        if (searchKeyWords.includes("collect")) {
-            const fid = getFidFromUrl(searchKeyWords);
-             res = await getCollectList({fid: fid});
-        }else if(searchKeyWords.includes("favlist")){
-            const fid = getFidFromUrl(searchKeyWords);
+        console.log(keyWords)
+        if (keyWords.includes("collectiondetail")) {
+            const {mid, season_id} = extractIdsFromUrl(keyWords)
+            res = await getCollectiondetailList({mid, season_id})
+        } else if (keyWords.includes("favlist")) {
+            const fid = getFidFromUrl(keyWords);
             res = await getCreateList({media_id: fid});
+        } else if (keyWords.includes("collect")){
+            const fid = getFidFromUrl(keyWords);
+            res = await getCollectList({fid: fid});
+        }else if (keyWords.includes("seriesdetail")){
+            const {mid, series_id} = extractMidSidFromUrl(keyWords)
+            res = await getSeriesdetailList({mid, series_id})
         }
-        if (res.data.medias.length){
+        if (res.data.medias.length) {
             setData(res.data.medias);
-        }else{
+        } else {
             setData([]);
         }
     }
-    function getFidFromUrl(url:string) {
+    function extractMidSidFromUrl(url:string) {
+        const regex = /https:\/\/space\.bilibili\.com\/(\d+)\/channel\/seriesdetail\?sid=(\d+)/;
+        const match = url.match(regex);
+
+        if (match) {
+            const mid = match[1];
+            const series_id = match[2];
+            return { mid, series_id };
+        } else {
+            return {mid:'', series_id:''};
+        }
+    }
+    function extractIdsFromUrl(url:string) {
+        const regex = /https:\/\/space\.bilibili\.com\/(\d+)\/channel\/collectiondetail\?sid=(\d+)/;
+        const match = url.match(regex);
+
+        if (match) {
+            const mid = match[1];
+            const season_id = match[2];
+            return { mid, season_id };
+        } else {
+            return {mid:'', season_id:''};
+        }
+    }
+
+    function getFidFromUrl(url: string) {
         // 正则表达式匹配 'fid=' 后面跟着一个或多个数字
         const regex = /[?&]fid=(\d+)/;
         const match = url.match(regex);
@@ -72,6 +139,7 @@ export default function App() {
         // 如果没有匹配到，返回 null 或 undefined
         return '';
     }
+
     React.useEffect(() => {
         // getCollectListAct().then();
     }, []);
@@ -122,39 +190,61 @@ export default function App() {
         }
     }, []);
     return (
-                <Table
-                    aria-label="Example table with custom cells"
-                    selectionMode="single"
-                    topContent={
-                        <div className="flex flex-col gap-4">
-                            <div className="flex justify-between gap-3 items-end">
-                                <Input
-                                    isClearable
-                                    className="w-full sm:max-w-[44%]"
-                                    placeholder="请输入B站收藏夹地址"
-                                    startContent={<SearchIcon onClick={searchAct}/>}
-                                    value={searchKeyWords}
-                                    onValueChange={ setSearchKeyWords}
-                                />
-                            </div>
+        <Table
+            aria-label="Example table with custom cells"
+            selectionMode="single"
+            selectedKeys={selectedKeys}
+            onSelectionChange={onSelectionChange}
+            topContent={
+                <div className="flex flex-col gap-4">
+                    <div className="flex justify-center gap-3 items-center flex-col">
+                        <audio controls key={musicURl} ref={audioRef}>
+                            <source src={musicURl} type="audio/mpeg"/>
+                            Your browser does not support the audio element.
+                        </audio>
+                        <div className={"w-full"}>
+                            <Card>
+                                {/*<CardHeader className="flex gap-3">*/}
+                                {/*    推荐：*/}
+                                {/*</CardHeader>*/}
+                                <CardBody>
+                                    <div className="flex gap-4">
+                                        {recommendList.map((item) => (
+                                            <Chip key={item.url}
+                                                  onClick={() => recommendClick(item.url)}>{item.title}</Chip>
+                                        ))}
+                                    </div>
+                                </CardBody>
+                            </Card>
+
                         </div>
-                    }
-                >
-                    <TableHeader columns={columns}>
-                        {(column) => (
-                            <TableColumn key={column.uid} align={column.uid === "actions" ? "center" : "start"}>
-                                {column.name}
-                            </TableColumn>
-                        )}
-                    </TableHeader>
-                    <TableBody items={data}>
-                        {(item) => (
-                            <TableRow key={item.id}>
-                                {(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
+                        <Input
+                            isClearable
+                            className="w-full sm:max-w-[44%]"
+                            placeholder="请输入B站收藏夹地址"
+                            startContent={<SearchIcon onClick={()=>searchAct(searchKeyWords)}/>}
+                            value={searchKeyWords}
+                            onValueChange={setSearchKeyWords}
+                        />
+                    </div>
+                </div>
+            }
+        >
+            <TableHeader columns={columns}>
+                {(column) => (
+                    <TableColumn key={column.uid} align={column.uid === "actions" ? "center" : "start"}>
+                        {column.name}
+                    </TableColumn>
+                )}
+            </TableHeader>
+            <TableBody items={data}>
+                {(item) => (
+                    <TableRow key={item.bvid}>
+                        {(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
+                    </TableRow>
+                )}
+            </TableBody>
+        </Table>
 
 
     );
