@@ -10,7 +10,7 @@ const users = [
         status: "active",
         age: "29",
         cover: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
-        email: "tony.reichert@example.com",
+        title: "tony.reichert@example.com",
         link:'',
         bvid:'',
     },

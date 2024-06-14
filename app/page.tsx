@@ -66,21 +66,36 @@ export default function App() {
     ]
     const recommendClick = (url: string) => {
         setSearchKeyWords(url);
-        searchAct(url);
+        searchAct(url).then();
     }
     const [musicURl, setMusicURl] = React.useState("");
     const [selectedKeys, setSelectedKeys] = React.useState(new Set([]));
     const [searchKeyWords, setSearchKeyWords] = React.useState("");
     const [data, setData] = React.useState(users);
     const onSelectionChange = async (keys: any) => {
-        console.log(keys.currentKey)
+        console.log(keys.currentKey);
         setSelectedKeys(keys);
-        const musicUrl = await getMusicUrl({bvid: keys.currentKey}).then(res => res.data);
-        setMusicURl(musicUrl);
-        setTimeout(() => {
-            audioRef.current?.play();
-        },200)
-    };
+
+        // 假设 `getMusicUrl` 呼叫您的API并获得了音频文件的下载链接
+        const response = await fetch('/api/getMusicUrl', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ bvid: keys.currentKey }),
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const musicUrl = URL.createObjectURL(blob);
+            setMusicURl(musicUrl);
+            setTimeout(() => {
+                audioRef.current?.play();
+            }, 200);
+        } else {
+            // 处理错误情况
+        }
+    }
     const searchAct = async (keyWords = searchKeyWords) => {
         let res;
         console.log(keyWords)
@@ -153,10 +168,10 @@ export default function App() {
                 return (
                     <User
                         avatarProps={{radius: "lg", src: user.cover}}
-                        description={user.email}
+                        description={user.title}
                         name={cellValue}
                     >
-                        {user.email}
+                        {user.title}
                     </User>
                 );
             case "bvid":

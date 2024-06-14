@@ -8,7 +8,6 @@ export async function POST(req:NextRequest) {
 
         // 获取cid,https://api.bilibili.com/x/web-interface/view?cid=
         const cidRes = await fetch(`https://api.bilibili.com/x/web-interface/view?bvid=${bvid}`).then(res => res.json()).then(res => res)
-        console.log(cidRes)
         if (cidRes.code!==0) return BizResult.fail('', '请检查bvid是否正确');
         const headers = new Headers({
             'Referer': `https://www.bilibili.com/video/${bvid}`,
@@ -18,7 +17,23 @@ export async function POST(req:NextRequest) {
         const res = await fetch(`https://api.bilibili.com/x/player/playurl?qn=112&fnval=16&bvid=${bvid}&cid=${cidRes.data.cid}`,{
             headers: headers
         }).then(res => res.json())
-        return BizResult.success(res.data.dash.audio[0].baseUrl, '获取成功')
+        console.log(res.data)
+        // return BizResult.success(res.data.dash.audio[0].backupUrl[0], '获取成功')
+        // 创建一个下载文件的Response
+        const downloadUrl = res.data.dash.audio[0].backupUrl[0];
+        const fileRes = await fetch(downloadUrl,{
+            headers: headers
+        });
+        const fileBlob = await fileRes.blob();
+
+        // 设置文件下载所需的Response头
+        const contentDisposition = `attachment; filename="${bvid}.m4a"`;
+        return new Response(fileBlob, {
+            headers: {
+                'Content-Disposition': contentDisposition,
+                'Content-Type': 'audio/mpeg'
+            }
+        });
     } catch (error) {
         console.log(error);
         return BizResult.fail('', '系统异常');
