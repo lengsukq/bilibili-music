@@ -9,8 +9,14 @@ export async function getMusicUrl(params:getMusicUrlParams) {
 }
 
 export interface getCollectListParams {
-    media_id: string;
+    fid: string;
 }
 export async function getCollectList(params:getCollectListParams) {
     return post(`/api/getCollectList`,params);
+}
+export interface getCreateListParams {
+    media_id: string;
+}
+export async function getCreateList(params:getCreateListParams) {
+    return post(`/api/getCreateList`,params);
 }

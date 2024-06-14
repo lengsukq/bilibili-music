@@ -18,7 +18,7 @@ import {DeleteIcon} from "@/Components/icon/DeleteIcon";
 import {EyeIcon} from "@/Components/icon/EyeIcon";
 import {SearchIcon} from "@/Components/icon/SearchIcon";
 import {users} from "@/Components/icon/data";
-import {getCollectList} from "@/utils/client/apihttp";
+import {getCollectList, getCreateList} from "@/utils/client/apihttp";
 
 const statusColorMap: Record<string, ChipProps["color"]> = {
     active: "success",
@@ -31,17 +31,30 @@ type User = typeof users[0];
 export default function App() {
     const columns = [
         {name: "标题", uid: "title"},
-        {name: "封面", uid: "cover"},
+        // {name: "封面", uid: "cover"},
         {name: "源地址", uid: "bvid"},
-        {name: "ACTIONS", uid: "actions"},
+        // {name: "ACTIONS", uid: "actions"},
     ];
     const [searchKeyWords, setSearchKeyWords] = React.useState("");
     const [data, setData] = React.useState(users);
-    const getCollectListAct = async () => {
-        const key = getFidFromUrl(searchKeyWords);
-        console.log(key)
-        const res = await getCollectList({media_id: key});
+    const getCollectListAct = async (fid:string) => {
+        const res = await getCollectList({fid: fid});
         console.log(res, "res")
+        if (res.data.medias.length){
+            setData(res.data.medias);
+        }else{
+            setData([]);
+        }
+    }
+    const searchAct = async () => {
+        let res;
+        if (searchKeyWords.includes("collect")) {
+            const fid = getFidFromUrl(searchKeyWords);
+             res = await getCollectList({fid: fid});
+        }else if(searchKeyWords.includes("favlist")){
+            const fid = getFidFromUrl(searchKeyWords);
+            res = await getCreateList({media_id: fid});
+        }
         if (res.data.medias.length){
             setData(res.data.medias);
         }else{
@@ -82,7 +95,6 @@ export default function App() {
                 return (
                     <Link isBlock showAnchorIcon target="_blank" href={`https://www.bilibili.com/video/${user.bvid}`}
                           color="foreground">
-                        点击访问
                     </Link>
                 )
             case "actions":
@@ -113,15 +125,14 @@ export default function App() {
                 <Table
                     aria-label="Example table with custom cells"
                     selectionMode="single"
-                    color="secondary"
                     topContent={
                         <div className="flex flex-col gap-4">
                             <div className="flex justify-between gap-3 items-end">
                                 <Input
                                     isClearable
                                     className="w-full sm:max-w-[44%]"
-                                    placeholder="Search by name..."
-                                    startContent={<SearchIcon onClick={getCollectListAct}/>}
+                                    placeholder="请输入B站收藏夹地址"
+                                    startContent={<SearchIcon onClick={searchAct}/>}
                                     value={searchKeyWords}
                                     onValueChange={ setSearchKeyWords}
                                 />
