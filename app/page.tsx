@@ -52,7 +52,7 @@ export default function App() {
   const [page, setPage] = React.useState(1);
 
   const getCollectListAct = async () => {
-    getCollectList({media_id:"3081523913"}).then((res) => {
+    getCollectList({media_id:filterValue}).then((res) => {
 
     })
   }
