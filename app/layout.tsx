@@ -13,6 +13,8 @@ export const metadata: Metadata = {
 export default function RootLayout({children}: { children: React.ReactNode }) {
   return (
       <html lang="en" className='light m-4'>
+      {/*b站图片显示meta*/}
+      <meta name="referrer" content="no-referrer"/>
       <body className={inter.className}>
       <Providers>
         {children}
