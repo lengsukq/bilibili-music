@@ -20,7 +20,7 @@ export async function POST(req:NextRequest) {
         console.log(res.data)
         // return BizResult.success(res.data.dash.audio[0].backupUrl[0], '获取成功')
         // 创建一个下载文件的Response
-        const downloadUrl = res.data.dash.audio[0].backupUrl[0];
+        const downloadUrl = res.data.dash.audio[0].baseUrl;
         const fileRes = await fetch(downloadUrl,{
             headers: headers
         });
