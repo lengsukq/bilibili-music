@@ -1,5 +1,5 @@
 'use client'
-import {message} from "antd";
+// import {message} from "antd";
 interface ErrorWithResponse extends Error {
     response?: Response;
 }
@@ -11,7 +11,7 @@ const checkStatus = (res:Response) => {
         return res;
     }
     res.json().then(value => {
-        message.error(`${value.msg}`);
+        // message.error(`${value.msg}`);
 
     })
     const error:ErrorWithResponse = new Error(res.statusText);
@@ -31,7 +31,7 @@ const judgeOkState = async (res:Response) => {
     // }
     // 可以在这里管控全局请求
     if (!!cloneRes.code && cloneRes.code !== 200) {
-        message.error(`${cloneRes.msg}`);
+        // message.error(`${cloneRes.msg}`);
 
     }
     return res;
@@ -45,7 +45,7 @@ interface ResponseError {
  * @param error
  */
 const handleError = (error: Error): ResponseError => {
-    message.error(`网络请求失败,${error}`);
+    // message.error(`网络请求失败,${error}`);
     return {   //防止页面崩溃，因为每个接口都有判断res.code以及data
         code: -1,
         data: false,

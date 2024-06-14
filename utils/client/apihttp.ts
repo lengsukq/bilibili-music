@@ -12,5 +12,5 @@ export interface getCollectListParams {
     media_id: string;
 }
 export async function getCollectList(params:getCollectListParams) {
-    return post(`/api/getMusicUrl`,params);
+    return post(`/api/getCollectList`,params);
 }
