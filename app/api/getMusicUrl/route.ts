@@ -1,7 +1,7 @@
 import BizResult from "@/utils/BizResult";
 import {NextRequest} from 'next/server'
 
-// 退出接口
+
 export async function POST(req:NextRequest) {
     try {
         const { bvid } = await req.json();
@@ -17,7 +17,7 @@ export async function POST(req:NextRequest) {
         const res = await fetch(`https://api.bilibili.com/x/player/playurl?qn=112&fnval=16&bvid=${bvid}&cid=${cidRes.data.cid}`,{
             headers: headers
         }).then(res => res.json())
-        console.log(res.data)
+        // console.log(res.data)
         // return BizResult.success(res.data.dash.audio[0].backupUrl[0], '获取成功')
         // 创建一个下载文件的Response
         const downloadUrl = res.data.dash.audio[0].baseUrl;
